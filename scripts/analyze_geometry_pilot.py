@@ -48,9 +48,12 @@ METADATA_COLUMNS = {
     "focal",
     "sample_rate",
     "amplitude_variant",
+    "representation",
     "normalization_target_dbfs",
     "normalization_gain_db",
     "normalization_peak_limited",
+    "raw_rms_dbfs",
+    "segment_n_samples",
 }
 
 EXTRACTION_PARAMETER_COLUMNS = {
@@ -162,6 +165,7 @@ def save_confusion_plot(cm: np.ndarray, labels: list[str], path: Path, title: st
 def analyze_variant(
     df: pd.DataFrame,
     pilot_name: str,
+    representation_name: str,
     variant: str,
     project_root: Path,
     random_state: int,
@@ -174,11 +178,12 @@ def analyze_variant(
     x = prepare_matrix(variant_df, feature_columns)
 
     pca2 = PCA(n_components=2, random_state=random_state).fit_transform(x)
+    prefix = f"{representation_name}_{pilot_name}_{variant}" if representation_name else f"{pilot_name}_{variant}"
     save_embedding_plot(
         pca2,
         labels,
-        project_root / "figures" / f"pca_{pilot_name}_{variant}.png",
-        f"PCA: {pilot_name}, {variant}",
+        project_root / "figures" / f"pca_{prefix}.png",
+        f"PCA: {representation_name}, {pilot_name}, {variant}",
     )
 
     umap2 = umap.UMAP(
@@ -191,8 +196,8 @@ def analyze_variant(
     save_embedding_plot(
         umap2,
         labels,
-        project_root / "figures" / f"umap_{pilot_name}_{variant}.png",
-        f"UMAP: {pilot_name}, {variant}",
+        project_root / "figures" / f"umap_{prefix}.png",
+        f"UMAP: {representation_name}, {pilot_name}, {variant}",
     )
 
     clusterer = hdbscan.HDBSCAN(min_cluster_size=50, min_samples=10)
@@ -224,27 +229,29 @@ def analyze_variant(
     save_confusion_plot(
         cm,
         list(label_encoder.classes_),
-        project_root / "figures" / f"confusion_linear_probe_{pilot_name}_{variant}.png",
-        f"Linear probe confusion: {pilot_name}, {variant}",
+        project_root / "figures" / f"confusion_linear_probe_{prefix}.png",
+        f"Linear probe confusion: {representation_name}, {variant}",
     )
 
     confusion_df = pd.DataFrame(cm, index=label_encoder.classes_, columns=label_encoder.classes_)
     confusion_df.index.name = "true_label"
-    confusion_df.to_csv(project_root / "features" / f"confusion_linear_probe_{pilot_name}_{variant}.csv")
+    confusion_df.to_csv(project_root / "features" / f"confusion_linear_probe_{prefix}.csv")
 
     knn_purity = knn_label_purity(x, labels, k=15)
     bic_df, best_k = run_gmm_bic(x, max_components=12, random_state=random_state)
     bic_df["pilot_name"] = pilot_name
+    bic_df["representation"] = representation_name
     bic_df["amplitude_variant"] = variant
-    bic_df.to_csv(project_root / "features" / f"gmm_bic_{pilot_name}_{variant}.csv", index=False)
+    bic_df.to_csv(project_root / "features" / f"gmm_bic_{prefix}.csv", index=False)
 
     assignments = variant_df[["call_id", "label"]].copy()
     assignments["hdbscan_cluster"] = cluster_labels
     assignments["hdbscan_probability"] = clusterer.probabilities_
-    assignments.to_csv(project_root / "features" / f"hdbscan_assignments_{pilot_name}_{variant}.csv", index=False)
+    assignments.to_csv(project_root / "features" / f"hdbscan_assignments_{prefix}.csv", index=False)
 
     return {
         "pilot_name": pilot_name,
+        "representation": representation_name,
         "amplitude_variant": variant,
         "n_calls": len(variant_df),
         "n_labels": len(label_names),
@@ -267,14 +274,29 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run first-pass repertoire geometry analysis.")
     parser.add_argument("--project-root", type=Path, default=PROJECT_ROOT)
     parser.add_argument("--pilot-name", default="balanced_600")
+    parser.add_argument("--representation-name", default="librosa_summary")
+    parser.add_argument("--feature-file", type=Path, default=None)
+    parser.add_argument("--validity-file", type=Path, default=None)
+    parser.add_argument("--require-valid", action="store_true")
+    parser.add_argument("--output-name", default=None)
     parser.add_argument("--random-state", type=int, default=42)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    feature_path = args.project_root / "features" / f"acoustic_features_{args.pilot_name}.csv"
+    feature_path = args.feature_file or args.project_root / "features" / f"acoustic_features_{args.pilot_name}.csv"
     df = pd.read_csv(feature_path)
+    if args.require_valid:
+        if args.validity_file is None:
+            raise ValueError("--validity-file is required when --require-valid is set")
+        validity = pd.read_csv(args.validity_file)
+        keep = validity[validity["valid"].astype(bool)][["call_id", "amplitude_variant"]].copy()
+        keep["__keep__"] = True
+        df = df.merge(keep, on=["call_id", "amplitude_variant"], how="left")
+        df = df[df["__keep__"].fillna(False)].drop(columns=["__keep__"])
+        if df.empty:
+            raise ValueError("No valid rows remained after filtering")
     results = []
     for variant in sorted(df["amplitude_variant"].unique()):
         print(f"analyzing {variant}", flush=True)
@@ -282,12 +304,14 @@ def main() -> None:
             analyze_variant(
                 df=df,
                 pilot_name=args.pilot_name,
+                representation_name=args.representation_name,
                 variant=variant,
                 project_root=args.project_root,
                 random_state=args.random_state,
             )
         )
-    metrics_path = args.project_root / "features" / f"geometry_metrics_{args.pilot_name}.csv"
+    output_name = args.output_name or f"geometry_metrics_{args.representation_name}_{args.pilot_name}.csv"
+    metrics_path = args.project_root / "features" / output_name
     with metrics_path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=list(results[0].keys()))
         writer.writeheader()

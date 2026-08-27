@@ -43,6 +43,7 @@ Generated CSV files and all audio/model artifacts stay out of Git.
 - `scripts/build_meerkat_call_manifest.py`: reads HDF5 label files and creates call-level manifest tables.
 - `scripts/make_pilot_manifest.py`: creates class-balanced or capped pilot manifests from the full call manifest.
 - `scripts/extract_acoustic_features.py`: extracts raw and RMS-normalized acoustic features plus QC.
+- `scripts/extract_egemaps_features.py`: extracts openSMILE eGeMAPSv02 Functionals with raw and RMS-normalized variants plus validity QC.
 - `scripts/analyze_geometry_pilot.py`: runs first-pass PCA, UMAP, HDBSCAN, linear probe, kNN purity, and GMM+BIC.
 - `scripts/extract_spectrogram_representation.py`: extracts fixed-size raw and RMS-normalized log-mel spectrogram vectors.
 - `scripts/analyze_embedding_pilot.py`: runs the same geometry analysis on dense vector representations such as spectrogram embeddings.
@@ -118,3 +119,9 @@ The HDBSCAN sensitivity diagnostic for the paper-style spectrogram baseline is s
 - `reports/hdbscan_sensitivity_logmel_paper_pad500_balanced_600.md`
 
 Across 250 HDBSCAN fits over raw/normalized variants, PCA spaces, and HDBSCAN parameters, the highest observed AMI was about 0.184. This shows that the all-noise default result was partly parameter-dependent, but the recovered clusters were fragmented, noisy, and only weakly aligned with public labels. When screened first using unsupervised criteria such as noise rate, cluster count, cluster size, and persistence, the remaining settings still had weak AMI/ARI.
+
+The first eGeMAPS baseline is summarized in:
+
+- `reports/egemaps_balanced_600.md`
+
+eGeMAPS produced somewhat higher default-HDBSCAN AMI than the earlier baselines, but feature validity was highly label-dependent. In particular, most `sn` calls were too short for valid eGeMAPS extraction under original call boundaries. A valid-only sensitivity analysis reduced the apparent separability, so eGeMAPS does not overturn the current conclusion that public labels are only weakly aligned with natural acoustic clusters.

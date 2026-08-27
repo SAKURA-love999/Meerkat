@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Raw and derived data
+data_manifest/*.csv
+features/
+figures/*.png
+figures/*.pdf
+figures/*.svg
+
+# Large audio/model artifacts
+*.wav
+*.h5
+*.zip
+*.pt
+*.pth
+*.ckpt
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

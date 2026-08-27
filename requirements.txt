@@ -1,0 +1,13 @@
+h5py
+numpy
+pandas
+scipy
+scikit-learn
+soundfile
+librosa
+matplotlib
+seaborn
+umap-learn
+hdbscan
+scikit-fuzzy
+opensmile

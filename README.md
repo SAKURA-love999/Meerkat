@@ -44,6 +44,8 @@ Generated CSV files and all audio/model artifacts stay out of Git.
 - `scripts/make_pilot_manifest.py`: creates class-balanced or capped pilot manifests from the full call manifest.
 - `scripts/extract_acoustic_features.py`: extracts raw and RMS-normalized acoustic features plus QC.
 - `scripts/analyze_geometry_pilot.py`: runs first-pass PCA, UMAP, HDBSCAN, linear probe, kNN purity, and GMM+BIC.
+- `scripts/extract_spectrogram_representation.py`: extracts fixed-size raw and RMS-normalized log-mel spectrogram vectors.
+- `scripts/analyze_embedding_pilot.py`: runs the same geometry analysis on dense vector representations such as spectrogram embeddings.
 
 ## Usage
 
@@ -101,3 +103,9 @@ The HDBSCAN parameter sensitivity diagnostic is summarized in:
 - `reports/hdbscan_sensitivity_balanced_600.md`
 
 Across 200 HDBSCAN fits over raw/normalized features, full/PCA spaces, and multiple `min_cluster_size`/`min_samples` values, label-cluster alignment remained weak. The best AMI was about 0.14 in PCA-10, with a high noise rate around 0.64.
+
+The first log-mel spectrogram representation baseline is summarized in:
+
+- `reports/logmel_spectrogram_balanced_600.md`
+
+This diagnostic checks whether weak clustering was caused by using overly coarse hand-crafted summary features. A simple 64x64 call-boundary log-mel representation did not improve label-aligned natural clustering or linear-probe separability. This suggests that the weak cluster result is not only a librosa-summary-feature artifact, although stronger context-aware embeddings still need to be tested.

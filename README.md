@@ -46,6 +46,7 @@ Generated CSV files and all audio/model artifacts stay out of Git.
 - `scripts/extract_egemaps_features.py`: extracts openSMILE eGeMAPSv02 Functionals with raw and RMS-normalized variants plus validity QC.
 - `scripts/analyze_geometry_pilot.py`: runs first-pass PCA, UMAP, HDBSCAN, linear probe, kNN purity, and GMM+BIC.
 - `scripts/extract_spectrogram_representation.py`: extracts fixed-size raw and RMS-normalized log-mel spectrogram vectors.
+- `scripts/extract_animal2vec_embeddings.py`: extracts context-window animal2vec embeddings with focal-frame pooling when a compatible animal2vec environment and checkpoint are available.
 - `scripts/analyze_embedding_pilot.py`: runs the same geometry analysis on dense vector representations such as spectrogram embeddings.
 
 ## Usage
@@ -125,3 +126,13 @@ The first eGeMAPS baseline is summarized in:
 - `reports/egemaps_balanced_600.md`
 
 eGeMAPS produced somewhat higher default-HDBSCAN AMI than the earlier baselines, but feature validity was highly label-dependent. In particular, most `sn` calls were too short for valid eGeMAPS extraction under original call boundaries. A valid-only sensitivity analysis reduced the apparent separability, so eGeMAPS does not overturn the current conclusion that public labels are only weakly aligned with natural acoustic clusters.
+
+The animal2vec extraction plan and script are summarized in:
+
+- `reports/animal2vec_plan.md`
+
+animal2vec should be run in a separate Python 3.9-compatible environment because the official repository depends on fairseq and warns that Python 3.10+ is not compatible. The extraction script uses real acoustic context as model input, but pools only focal-call frames for the final embedding.
+
+The optional dependency list for that separate environment is:
+
+- `requirements-animal2vec.txt`

@@ -74,3 +74,6 @@ The next representation-level diagnostic should avoid forcing very short calls i
 3. Pool or mask only the focal-call frames for the final call embedding.
 4. Run 250/500/1000 ms context sensitivity analysis.
 
+A second paper-style spectrogram baseline that preserves call duration by right-padding to a 500 ms grid is summarized in:
+
+- `reports/paper_style_spectrogram_balanced_600.md`

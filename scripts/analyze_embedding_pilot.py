@@ -48,21 +48,41 @@ def knn_label_purity(x: np.ndarray, y: np.ndarray, k: int) -> float:
 
 
 def run_gmm_bic(x: np.ndarray, max_components: int, random_state: int) -> tuple[pd.DataFrame, int]:
-    pca_dims = min(50, x.shape[1], x.shape[0] - 1)
-    x_reduced = PCA(n_components=pca_dims, random_state=random_state).fit_transform(x)
+    pca_dims = min(20, x.shape[1], x.shape[0] - 1)
+    x_reduced = PCA(n_components=pca_dims, random_state=random_state).fit_transform(x).astype(np.float64)
     rows = []
     for n_components in range(1, max_components + 1):
-        model = GaussianMixture(
-            n_components=n_components,
-            covariance_type="full",
-            random_state=random_state,
-            reg_covar=1e-6,
-            max_iter=300,
+        bic = float("nan")
+        used_reg_covar = float("nan")
+        error = ""
+        for reg_covar in (1e-6, 1e-5, 1e-4, 1e-3):
+            try:
+                model = GaussianMixture(
+                    n_components=n_components,
+                    covariance_type="diag",
+                    random_state=random_state,
+                    reg_covar=reg_covar,
+                    max_iter=300,
+                )
+                model.fit(x_reduced)
+                bic = float(model.bic(x_reduced))
+                used_reg_covar = reg_covar
+                error = ""
+                break
+            except ValueError as exc:
+                error = str(exc).splitlines()[0]
+        rows.append(
+            {
+                "n_components": n_components,
+                "covariance_type": "diag",
+                "bic": bic,
+                "reg_covar": used_reg_covar,
+                "fit_error": error,
+            }
         )
-        model.fit(x_reduced)
-        rows.append({"n_components": n_components, "bic": float(model.bic(x_reduced))})
     bic_df = pd.DataFrame(rows)
-    best_k = int(bic_df.loc[bic_df["bic"].idxmin(), "n_components"])
+    valid_bic = bic_df.dropna(subset=["bic"])
+    best_k = int(valid_bic.loc[valid_bic["bic"].idxmin(), "n_components"]) if not valid_bic.empty else -1
     return bic_df, best_k
 
 
@@ -240,8 +260,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    npz_name = args.npz_name or f"spectrogram_logmel_{args.pilot_name}.npz"
+    npz_name = args.npz_name or f"spectrogram_{args.representation_name}_{args.pilot_name}.npz"
     npz_path = args.project_root / "features" / npz_name
+    if not npz_path.exists() and args.npz_name is None and args.representation_name == "logmel_call_resize":
+        npz_path = args.project_root / "features" / f"spectrogram_logmel_{args.pilot_name}.npz"
     data = np.load(npz_path, allow_pickle=False)
     x = data["X"]
     labels = data["labels"]

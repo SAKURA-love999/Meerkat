@@ -14,6 +14,7 @@ import soundfile as sf
 
 PROJECT_ROOT = Path(r"C:\学校\MeerKAT\repertoire_geometry")
 EPS = 1e-10
+DEFAULT_SAMPLE_RATE = 8000
 
 
 @lru_cache(maxsize=256)
@@ -68,13 +69,34 @@ def resize_time_axis(spec: np.ndarray, target_frames: int) -> np.ndarray:
     return resized
 
 
+def zscore_spectrogram(spec: np.ndarray) -> np.ndarray:
+    mean = float(np.mean(spec))
+    std = float(np.std(spec))
+    if not np.isfinite(std) or std <= EPS:
+        return np.zeros_like(spec, dtype=np.float32)
+    return ((spec - mean) / std).astype(np.float32)
+
+
+def pad_time_axis(spec: np.ndarray, target_frames: int) -> tuple[np.ndarray, int]:
+    if spec.shape[1] > target_frames:
+        return spec[:, :target_frames].astype(np.float32), int(spec.shape[1] - target_frames)
+    if spec.shape[1] == target_frames:
+        return spec.astype(np.float32), 0
+    padded = np.zeros((spec.shape[0], target_frames), dtype=np.float32)
+    padded[:, : spec.shape[1]] = spec
+    return padded, 0
+
+
 def logmel_vector(
     audio: np.ndarray,
     sample_rate: int,
     n_mels: int,
-    target_frames: int,
     n_fft: int,
     hop_length: int,
+    representation_name: str,
+    target_frames: int | None = None,
+    max_duration_sec: float | None = None,
+    per_spectrogram_zscore: bool = False,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     if audio.size == 0:
         raise ValueError("empty audio segment")
@@ -82,26 +104,51 @@ def logmel_vector(
         y=audio,
         sr=sample_rate,
         n_fft=n_fft,
+        win_length=n_fft,
         hop_length=hop_length,
         n_mels=n_mels,
         fmin=0,
-        fmax=sample_rate / 2,
+        fmax=min(4000, sample_rate / 2),
         power=2.0,
         center=True,
     )
     logmel = librosa.power_to_db(mel, ref=1.0, top_db=80.0)
-    resized = resize_time_axis(logmel.astype(np.float32), target_frames=target_frames)
-    vector = resized.reshape(-1).astype(np.float32)
+    spec = logmel.astype(np.float32)
+    if per_spectrogram_zscore:
+        spec = zscore_spectrogram(spec)
+
+    truncated_frames = 0
+    if representation_name == "logmel_call_resize":
+        if target_frames is None:
+            raise ValueError("target_frames is required for logmel_call_resize")
+        spec = resize_time_axis(spec, target_frames=target_frames)
+    elif representation_name == "logmel_paper_pad500":
+        if max_duration_sec is None:
+            raise ValueError("max_duration_sec is required for logmel_paper_pad500")
+        max_samples = int(round(max_duration_sec * sample_rate))
+        max_frames = int(np.ceil(max_samples / hop_length)) + 1
+        spec, truncated_frames = pad_time_axis(spec, target_frames=max_frames)
+    else:
+        raise ValueError(f"Unknown representation_name: {representation_name}")
+
+    vector = spec.reshape(-1).astype(np.float32)
     stats = {
         "orig_frames": int(logmel.shape[1]),
         "n_mels": n_mels,
-        "target_frames": target_frames,
+        "target_frames": int(spec.shape[1]),
         "n_fft": n_fft,
         "hop_length": hop_length,
+        "max_duration_sec": max_duration_sec if max_duration_sec is not None else "",
+        "per_spectrogram_zscore": per_spectrogram_zscore,
+        "truncated_frames": truncated_frames,
         "logmel_min": float(np.min(logmel)),
         "logmel_max": float(np.max(logmel)),
         "logmel_mean": float(np.mean(logmel)),
         "logmel_std": float(np.std(logmel)),
+        "vector_min": float(np.min(spec)),
+        "vector_max": float(np.max(spec)),
+        "vector_mean": float(np.mean(spec)),
+        "vector_std": float(np.std(spec)),
     }
     return vector, stats
 
@@ -126,10 +173,15 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Extract fixed-size log-mel spectrogram representations.")
     parser.add_argument("--project-root", type=Path, default=PROJECT_ROOT)
     parser.add_argument("--pilot-name", default="balanced_600")
-    parser.add_argument("--n-mels", type=int, default=64)
+    parser.add_argument("--representation-name", choices=["logmel_call_resize", "logmel_paper_pad500"], default="logmel_call_resize")
+    parser.add_argument("--n-mels", type=int, default=None)
     parser.add_argument("--target-frames", type=int, default=64)
-    parser.add_argument("--n-fft", type=int, default=256)
-    parser.add_argument("--hop-length", type=int, default=16)
+    parser.add_argument("--n-fft", type=int, default=None)
+    parser.add_argument("--hop-length", type=int, default=None)
+    parser.add_argument("--frame-ms", type=float, default=30.0)
+    parser.add_argument("--hop-ms", type=float, default=3.75)
+    parser.add_argument("--max-duration-sec", type=float, default=0.5)
+    parser.add_argument("--per-spectrogram-zscore", action="store_true")
     parser.add_argument("--target-dbfs", type=float, default=-25.0)
     parser.add_argument("--limit-rows", type=int, default=None)
     parser.add_argument("--progress-every", type=int, default=500)
@@ -142,6 +194,18 @@ def main() -> None:
     manifest = pd.read_csv(manifest_path)
     if args.limit_rows is not None:
         manifest = manifest.head(args.limit_rows)
+
+    sample_rate_for_defaults = int(manifest["sample_rate"].dropna().iloc[0]) if "sample_rate" in manifest else DEFAULT_SAMPLE_RATE
+    if args.representation_name == "logmel_call_resize":
+        n_mels = args.n_mels or 64
+        n_fft = args.n_fft or 256
+        hop_length = args.hop_length or 16
+        per_spectrogram_zscore = args.per_spectrogram_zscore
+    else:
+        n_mels = args.n_mels or 40
+        n_fft = args.n_fft or max(1, int(round(args.frame_ms * sample_rate_for_defaults / 1000.0)))
+        hop_length = args.hop_length or max(1, int(round(args.hop_ms * sample_rate_for_defaults / 1000.0)))
+        per_spectrogram_zscore = True if not args.per_spectrogram_zscore else args.per_spectrogram_zscore
 
     vectors: list[np.ndarray] = []
     metadata_rows: list[dict[str, Any]] = []
@@ -168,15 +232,18 @@ def main() -> None:
             vector, stats = logmel_vector(
                 audio=audio,
                 sample_rate=sample_rate,
-                n_mels=args.n_mels,
+                n_mels=n_mels,
                 target_frames=args.target_frames,
-                n_fft=args.n_fft,
-                hop_length=args.hop_length,
+                n_fft=n_fft,
+                hop_length=hop_length,
+                representation_name=args.representation_name,
+                max_duration_sec=args.max_duration_sec,
+                per_spectrogram_zscore=per_spectrogram_zscore,
             )
             base = {column: row[column] for column in base_columns if column in row}
             base.update(stats)
             base["amplitude_variant"] = variant
-            base["representation"] = "logmel_call_resize"
+            base["representation"] = args.representation_name
             base["normalization_target_dbfs"] = args.target_dbfs if variant == "rms_normalized" else ""
             base["normalization_gain_db"] = norm_gain_db if variant == "rms_normalized" else 0.0
             base["normalization_peak_limited"] = norm_limited if variant == "rms_normalized" else False
@@ -191,14 +258,14 @@ def main() -> None:
             print(f"processed={index + 1}/{len(manifest)}", flush=True)
 
     x = np.vstack(vectors).astype(np.float32)
-    out_base = args.project_root / "features" / f"spectrogram_logmel_{args.pilot_name}"
+    out_base = args.project_root / "features" / f"spectrogram_{args.representation_name}_{args.pilot_name}"
     np.savez(
         out_base.with_suffix(".npz"),
         X=x,
         labels=np.asarray(labels),
         call_ids=np.asarray(call_ids),
         amplitude_variants=np.asarray(variants),
-        representation=np.asarray(["logmel_call_resize"]),
+        representation=np.asarray([args.representation_name]),
     )
     write_metadata(out_base.with_name(out_base.name + "_metadata.csv"), metadata_rows)
     print(f"vectors: {x.shape}")

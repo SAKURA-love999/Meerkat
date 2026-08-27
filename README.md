@@ -107,5 +107,8 @@ Across 200 HDBSCAN fits over raw/normalized features, full/PCA spaces, and multi
 The first log-mel spectrogram representation baseline is summarized in:
 
 - `reports/logmel_spectrogram_balanced_600.md`
+- `reports/paper_style_spectrogram_balanced_600.md`
 
 This diagnostic checks whether weak clustering was caused by using overly coarse hand-crafted summary features. A simple 64x64 call-boundary log-mel representation did not improve label-aligned natural clustering or linear-probe separability. This suggests that the weak cluster result is not only a librosa-summary-feature artifact, although stronger context-aware embeddings still need to be tested.
+
+The paper-style version uses 40 mel bins, approximately 30 ms frames, 3.75 ms hops, per-spectrogram z-transform, original call duration, and right-padding to a 500 ms grid. It produced a more continuous UMAP trajectory, but default HDBSCAN assigned all points to noise and the linear probe remained around Macro-F1 0.53.

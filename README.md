@@ -102,7 +102,7 @@ The HDBSCAN parameter sensitivity diagnostic is summarized in:
 
 - `reports/hdbscan_sensitivity_balanced_600.md`
 
-Across 200 HDBSCAN fits over raw/normalized features, full/PCA spaces, and multiple `min_cluster_size`/`min_samples` values, label-cluster alignment remained weak. The best AMI was about 0.14 in PCA-10, with a high noise rate around 0.64.
+Across 200 HDBSCAN fits over raw/normalized features, full/PCA spaces, and multiple `min_cluster_size`/`min_samples` values, label-cluster alignment remained weak. The highest observed AMI was about 0.14 in PCA-10, with a high noise rate around 0.64.
 
 The first log-mel spectrogram representation baseline is summarized in:
 
@@ -117,4 +117,4 @@ The HDBSCAN sensitivity diagnostic for the paper-style spectrogram baseline is s
 
 - `reports/hdbscan_sensitivity_logmel_paper_pad500_balanced_600.md`
 
-Across 250 HDBSCAN fits over raw/normalized variants, PCA spaces, and HDBSCAN parameters, the best AMI was about 0.184. This shows that the all-noise default result was partly parameter-dependent, but the recovered clusters were fragmented, noisy, and only weakly aligned with public labels.
+Across 250 HDBSCAN fits over raw/normalized variants, PCA spaces, and HDBSCAN parameters, the highest observed AMI was about 0.184. This shows that the all-noise default result was partly parameter-dependent, but the recovered clusters were fragmented, noisy, and only weakly aligned with public labels. When screened first using unsupervised criteria such as noise rate, cluster count, cluster size, and persistence, the remaining settings still had weak AMI/ARI.

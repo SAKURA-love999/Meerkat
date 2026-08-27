@@ -46,7 +46,7 @@ This gives 200 HDBSCAN fits:
 
 AMI/ARI are the main label-cluster alignment metrics. Cluster count alone is not enough: HDBSCAN can find eight clusters that do not correspond to the eight manual labels.
 
-## Best Results by AMI
+## Highest Observed AMI Results
 
 | amplitude | space | min_cluster_size | min_samples | clusters | noise rate | AMI | ARI | majority purity |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -62,10 +62,10 @@ Changing HDBSCAN parameters improves label-cluster alignment slightly, especiall
 
 Main observations:
 
-1. The best AMI is about 0.14, which is still weak.
-2. The best ARI is about 0.04, also weak.
+1. The highest observed AMI is about 0.14, which is still weak.
+2. The corresponding ARI is about 0.04, also weak.
 3. Some settings find 7-9 clusters, but these clusters do not align cleanly with manual labels.
-4. Noise rates remain high in the best AMI settings, around 0.64.
+4. Noise rates remain high in the highest-AMI settings, around 0.64.
 5. Full feature space performs worse than PCA-10/PCA-20, suggesting that high-dimensional noise affects density clustering.
 6. Raw and RMS-normalized results are similar, so this diagnostic is not mainly driven by amplitude scale.
 
@@ -75,7 +75,7 @@ The first weak HDBSCAN result is not just an artifact of the single original par
 
 More precise statement:
 
-> Under hand-crafted acoustic features, public MeerKAT manual labels are not strongly aligned with HDBSCAN density clusters across a broad parameter grid. Dimensionality reduction to PCA-10 improves alignment slightly, but the best results remain weak and noisy.
+> Under hand-crafted acoustic features, public MeerKAT manual labels are not strongly aligned with HDBSCAN density clusters across a broad parameter grid. Dimensionality reduction to PCA-10 improves alignment slightly, but the highest observed AMI settings remain weak and noisy.
 
 ## What This Does Not Prove
 

@@ -81,11 +81,40 @@ def run_one(
     n_clusters = len(set(cluster_labels) - {-1})
     noise_rate = float(np.mean(cluster_labels == -1))
     clustered_mask = cluster_labels != -1
+    cluster_sizes = np.asarray(
+        [np.sum(cluster_labels == cluster_id) for cluster_id in sorted(set(cluster_labels) - {-1})],
+        dtype=float,
+    )
+    cluster_persistence = np.asarray(getattr(clusterer, "cluster_persistence_", []), dtype=float)
 
     if n_clusters > 1 and np.sum(clustered_mask) > n_clusters:
         cluster_silhouette = float(silhouette_score(x[clustered_mask], cluster_labels[clustered_mask]))
     else:
         cluster_silhouette = float("nan")
+
+    if cluster_sizes.size:
+        largest_cluster = float(np.max(cluster_sizes))
+        cluster_size_min = float(np.min(cluster_sizes))
+        cluster_size_median = float(np.median(cluster_sizes))
+        cluster_size_max = largest_cluster
+        largest_cluster_fraction_all = float(largest_cluster / len(labels))
+        largest_cluster_fraction_clustered = float(largest_cluster / np.sum(clustered_mask))
+    else:
+        cluster_size_min = float("nan")
+        cluster_size_median = float("nan")
+        cluster_size_max = float("nan")
+        largest_cluster_fraction_all = float("nan")
+        largest_cluster_fraction_clustered = float("nan")
+
+    if cluster_persistence.size:
+        mean_persistence = float(np.mean(cluster_persistence))
+        if cluster_persistence.size == cluster_sizes.size:
+            weighted_persistence = float(np.average(cluster_persistence, weights=cluster_sizes))
+        else:
+            weighted_persistence = float("nan")
+    else:
+        mean_persistence = float("nan")
+        weighted_persistence = float("nan")
 
     return {
         "min_cluster_size": min_cluster_size,
@@ -93,6 +122,14 @@ def run_one(
         "n_clusters": n_clusters,
         "noise_rate": noise_rate,
         "clustered_fraction": 1.0 - noise_rate,
+        "non_noise_count": int(np.sum(clustered_mask)),
+        "cluster_size_min": cluster_size_min,
+        "cluster_size_median": cluster_size_median,
+        "cluster_size_max": cluster_size_max,
+        "largest_cluster_fraction_all": largest_cluster_fraction_all,
+        "largest_cluster_fraction_clustered": largest_cluster_fraction_clustered,
+        "mean_cluster_persistence": mean_persistence,
+        "weighted_cluster_persistence": weighted_persistence,
         "ami_all_points": float(adjusted_mutual_info_score(labels, cluster_labels)),
         "ari_all_points": float(adjusted_rand_score(labels, cluster_labels)),
         "cluster_silhouette_no_noise": cluster_silhouette,
@@ -212,21 +249,21 @@ def main() -> None:
 
     summary = pd.DataFrame(all_rows)
     top20 = summary.sort_values(["ami_all_points", "ari_all_points"], ascending=False).head(20)
-    top_path = args.project_root / "features" / f"hdbscan_sensitivity_{args.representation_name}_{args.pilot_name}_top20.csv"
+    top_path = args.project_root / "features" / f"hdbscan_sensitivity_{args.representation_name}_{args.pilot_name}_highest_ami_top20.csv"
     top20.to_csv(top_path, index=False)
 
-    by_space = (
+    by_space_highest_ami = (
         summary.sort_values(["ami_all_points", "ari_all_points"], ascending=False)
         .groupby(["amplitude_variant", "space"], as_index=False)
         .head(1)
         .sort_values(["amplitude_variant", "space"])
     )
-    by_space_path = args.project_root / "features" / f"hdbscan_sensitivity_{args.representation_name}_{args.pilot_name}_best_by_space.csv"
-    by_space.to_csv(by_space_path, index=False)
+    by_space_path = args.project_root / "features" / f"hdbscan_sensitivity_{args.representation_name}_{args.pilot_name}_highest_ami_by_space.csv"
+    by_space_highest_ami.to_csv(by_space_path, index=False)
 
     print(f"results: {out_path}")
-    print(f"top20: {top_path}")
-    print(f"best_by_space: {by_space_path}")
+    print(f"highest_ami_top20: {top_path}")
+    print(f"highest_ami_by_space: {by_space_path}")
 
 
 if __name__ == "__main__":

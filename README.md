@@ -42,6 +42,8 @@ Generated CSV files and all audio/model artifacts stay out of Git.
 
 - `scripts/build_meerkat_call_manifest.py`: reads HDF5 label files and creates call-level manifest tables.
 - `scripts/make_pilot_manifest.py`: creates class-balanced or capped pilot manifests from the full call manifest.
+- `scripts/extract_acoustic_features.py`: extracts raw and RMS-normalized acoustic features plus QC.
+- `scripts/analyze_geometry_pilot.py`: runs first-pass PCA, UMAP, HDBSCAN, linear probe, kNN purity, and GMM+BIC.
 
 ## Usage
 
@@ -85,3 +87,11 @@ Use two pilot sets:
 - `capped_3000`: capped stratified pilot for checking whether the same patterns remain visible under a more natural, long-tailed label prevalence.
 
 For short calls such as `sn`, use raw call boundaries for hand-crafted acoustic features and eGeMAPS. For neural embeddings, use real acoustic context windows, then pool only the focal-call frames.
+
+## Current Pilot Result
+
+The first `balanced_600` acoustic-feature pilot is summarized in:
+
+- `reports/balanced_600_acoustic_pilot.md`
+
+The first result suggests that manual labels are moderately decodable from hand-crafted acoustic features, but do not align with eight clean unsupervised clusters under this representation. This is an initial pilot result only; eGeMAPS, animal2vec, and robustness analyses are still needed.

@@ -95,3 +95,9 @@ The first `balanced_600` acoustic-feature pilot is summarized in:
 - `reports/balanced_600_acoustic_pilot.md`
 
 The first result suggests that manual labels are moderately decodable from hand-crafted acoustic features, but do not align with eight clean unsupervised clusters under this representation. This is an initial pilot result only; eGeMAPS, animal2vec, and robustness analyses are still needed.
+
+The HDBSCAN parameter sensitivity diagnostic is summarized in:
+
+- `reports/hdbscan_sensitivity_balanced_600.md`
+
+Across 200 HDBSCAN fits over raw/normalized features, full/PCA spaces, and multiple `min_cluster_size`/`min_samples` values, label-cluster alignment remained weak. The best AMI was about 0.14 in PCA-10, with a high noise rate around 0.64.

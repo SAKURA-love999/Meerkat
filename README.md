@@ -136,3 +136,15 @@ animal2vec should be run in a separate Python 3.9-compatible environment because
 The optional dependency list for that separate environment is:
 
 - `requirements-animal2vec.txt`
+
+The current script I/O, preprocessing, label use, dimensionality reduction, clustering parameters, metric definitions, leakage risks, NaN/imputation handling, and result-code consistency audit is:
+
+- `reports/script_io_and_method_audit.md`
+
+Current animal2vec local environment status:
+
+- Python 3.9 environment: created locally as a project-specific environment; keep the exact machine path out of public Git.
+- Installed and smoke-tested: `torch==1.13.1+cpu`, `torchaudio==0.13.1+cpu`, `librosa==0.10.1`
+- Not yet installed: `fairseq`
+- Windows blockers observed: PyPI `fairseq==0.12.2` requires Microsoft Visual C++ Build Tools; the official pinned GitHub fairseq commit fails without symlink privileges/developer mode.
+- Preferred checkpoint for unsupervised representation geometry: `animal2vec_large_pretrained_MeerKAT_240507.pt`, not the finetuned checkpoint, because the finetuned version was trained with MeerKAT labels.

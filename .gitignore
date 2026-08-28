@@ -10,6 +10,7 @@ figures/*.pdf
 figures/*.svg
 
 # Large audio/model artifacts
+models/
 *.wav
 *.h5
 *.zip

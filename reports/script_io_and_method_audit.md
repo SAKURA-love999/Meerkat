@@ -208,6 +208,8 @@ The official model-weight DOI exposes two checkpoints:
 
 For the current unsupervised repertoire-geometry experiment, the pretrained checkpoint is the preferred first animal2vec representation. The finetuned checkpoint can be useful later, but it should be reported separately because it was trained with MeerKAT labels.
 
+Use `scripts/download_animal2vec_checkpoint.ps1` for resumable checkpoint downloads and MD5 verification. The default is the pretrained checkpoint.
+
 ## Reference Sources Used
 
 Official animal2vec GitHub repository: `https://github.com/livingingroups/animal2vec`

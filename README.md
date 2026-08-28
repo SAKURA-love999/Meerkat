@@ -148,3 +148,4 @@ Current animal2vec local environment status:
 - Not yet installed: `fairseq`
 - Windows blockers observed: PyPI `fairseq==0.12.2` requires Microsoft Visual C++ Build Tools; the official pinned GitHub fairseq commit fails without symlink privileges/developer mode.
 - Preferred checkpoint for unsupervised representation geometry: `animal2vec_large_pretrained_MeerKAT_240507.pt`, not the finetuned checkpoint, because the finetuned version was trained with MeerKAT labels.
+- Checkpoint download helper: `scripts/download_animal2vec_checkpoint.ps1` supports resumable Edmond downloads and MD5 verification.

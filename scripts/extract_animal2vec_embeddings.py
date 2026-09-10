@@ -201,6 +201,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pooling", choices=["mean", "max"], default="mean")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--limit-rows", type=int, default=None)
+    parser.add_argument("--output-suffix", default="")
     parser.add_argument("--progress-every", type=int, default=100)
     return parser.parse_args()
 
@@ -303,7 +304,8 @@ def main() -> None:
         if args.input_mode == "context_window"
         else f"animal2vec_source10s_focal_{args.pooling}"
     )
-    out_base = args.project_root / "features" / f"{representation_name}_{args.pilot_name}"
+    suffix = f"_{args.output_suffix}" if args.output_suffix else ""
+    out_base = args.project_root / "features" / f"{representation_name}_{args.pilot_name}{suffix}"
     np.savez(
         out_base.with_suffix(".npz"),
         X=x,

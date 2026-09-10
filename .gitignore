@@ -3,11 +3,14 @@ __pycache__/
 *.pyc
 
 # Raw and derived data
+data_bat/
 data_manifest/*.csv
 features/
 figures/*.png
 figures/*.pdf
 figures/*.svg
+reports/bat_proxy_audit/
+reports/bat_proxy_audit_test/
 
 # Large audio/model artifacts
 models/

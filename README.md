@@ -1,151 +1,182 @@
-# Vocal Repertoire Geometry: MeerKAT Case Study
+# Repertoire Geometry and Calibrated Proxy Validity
 
-This project uses public MeerKAT as the first case study for a reusable vocal repertoire geometry framework.
+This project studies animal vocal repertoires without assuming that manual call
+labels are automatically equivalent to natural acoustic categories or verified
+behavioral responses.
 
-The goal is to separate four questions that are often mixed together:
+The current direction has two connected parts:
 
-- Do human labels correspond to natural acoustic clusters?
-- Are human labels categorically separable in an acoustic representation?
-- Does a single label contain multiple acoustic modes?
-- Are calls arranged along continuous or graded acoustic geometry?
+1. **Vocal repertoire geometry:** test whether manual call labels correspond to
+   decodable, clustered, overlapping, coarse, graded, nuisance-confounded, or
+   unresolved acoustic structure.
+2. **Calibrated proxy validity:** quantify what temporal adjacency loses under
+   degraded observability, then test whether manual call categories exhaust
+   local sequence-predictive information under conservative, clip-local proxies.
 
-## First Case Study Question
+## Core Principle
 
-The first analysis asks a deliberately narrow question:
+The project should not directly claim that a later non-focal MeerKAT call is a
+response.
 
-> Do public MeerKAT human call labels correspond to natural structure in unsupervised acoustic space?
+Instead:
 
-This step does not claim to infer cognition, urgency, predator context, or individual identity. It tests whether a public labelled vocal repertoire contains label-aligned acoustic geometry that can be quantified and compared across representations.
+> Temporal adjacency is treated as a proxy whose validity must be calibrated,
+> stress-tested, and sometimes rejected as unresolved.
 
-## Current Structure
+This framing is important because public bioacoustic datasets often lack the
+spatial, identity, addressee, or behavioral ground truth needed to verify
+directed vocal responses.
+
+## Current MeerKAT Status
+
+Completed analyses include:
+
+- call manifest construction
+- balanced and capped-natural pilot datasets
+- librosa, log-mel, eGeMAPS, and animal2vec representations
+- PCA / UMAP visualization
+- HDBSCAN clustering
+- classifier probes
+- GMM coarse grouping
+- fuzzy c-means degeneration diagnostics
+- HDBSCAN parameter and bootstrap stability
+- GMM-vs-HDBSCAN coarse-group comparison
+- spectrogram-to-UMAP-to-HDBSCAN sanity-check replication
+
+Main current conclusion:
+
+> MeerKAT manual labels are acoustically decodable, but the tested
+> representations do not recover stable natural clusters that cleanly align with
+> the eight public manual call labels.
+
+This is not a claim that the repertoire is proven continuous. It is a
+conservative claim about what the tested protocols did and did not recover.
+
+## Revised Research Direction
+
+The next stage pivots from a MeerKAT-only clustering study to:
+
+> A calibrated proxy-validity and behavioral-sufficiency framework for animal
+> vocal sequence analysis.
+
+The revised question is:
+
+> Given imperfect public annotations, when can temporal adjacency be used as a
+> conservative proxy for local interaction, and do manual call categories exhaust
+> the information needed to predict that local interaction structure?
+
+## Planned Experiments
+
+### Experiment 1: Observability-Degradation Audit on High-Observability Data
+
+Use Egyptian fruit bat data with richer annotations such as emitter, addressee,
+and behavioral context.
+
+Goal:
+
+> Test whether voiced segments can be uniquely mapped to annotated interaction
+> intervals, then estimate by behavioral context how often temporal adjacency
+> links remain within the same annotated interval.
+
+The bat data do not provide a MeerKAT response window. They provide a way to
+measure how temporal-adjacency reliability changes with lag and context under
+degraded observability.
+
+### Experiment 2: Conservative MeerKAT Clip-Local Proxy
+
+Apply MeerKAT-specific windows from meerkat literature and sensitivity analysis,
+not from bat. The current primary design is:
+
+- 400 ms primary
+- 800 ms sensitivity
+- 1500 ms sensitivity
+
+Goal:
+
+> Test local sequence-predictive information under a conservative adjacency
+> proxy, not verified response behavior.
+
+The public MeerKAT data should be described as:
+
+> 184 h ground-truth-complete subset with clip-local temporal completeness.
+
+Do not describe it as a temporally continuous 184 h sequence. Cross-clip order
+and individual identity cannot be assumed recoverable from randomized clip
+filenames.
+
+### Experiment 3: Internal MeerKAT Proxy Checks
+
+If the relevant metadata exists, check whether adjacent calls are supported by:
+
+- individual identity
+- spatial or group context
+- co-occurring behavioral annotations
+- call-rate and recording controls
+
+If the metadata is absent, the analysis must explicitly report:
+
+> MeerKAT cannot internally validate the temporal-adjacency proxy, so conclusions
+> are conditional on the calibrated prior.
+
+### Experiment 4: Behavioral Sufficiency
+
+Use nested incremental tests as the main analysis:
 
 ```text
-repertoire_geometry/
-  data_manifest/
-  features/
-  figures/
-  reports/
-  scripts/
+M0: R_post ~ Y + C_pre + Q
+M1: R_post ~ Y + C_pre + Q + A_focal
 ```
 
-## Current Data Products
+where `Y` is manual category, `C_pre` is previous local vocal activity, `Q` is
+nuisance structure, and `A_focal` is strictly call-only acoustics.
 
-- `data_manifest/call_manifest.csv`: call-level manifest generated from public MeerKAT HDF5 labels.
-- `data_manifest/label_summary.csv`: counts by label, label category, and focal status.
-- `data_manifest/duration_summary.csv`: duration summary by label and focal status.
-- `data_manifest/pilot_manifest_balanced_600.csv`: balanced focal pilot subset with 600 calls per target label.
-- `data_manifest/pilot_manifest_capped_3000.csv`: larger focal pilot subset with up to 3000 calls per target label.
-
-Generated CSV files and all audio/model artifacts stay out of Git.
-
-## Scripts
-
-- `scripts/build_meerkat_call_manifest.py`: reads HDF5 label files and creates call-level manifest tables.
-- `scripts/make_pilot_manifest.py`: creates class-balanced or capped pilot manifests from the full call manifest.
-- `scripts/extract_acoustic_features.py`: extracts raw and RMS-normalized acoustic features plus QC.
-- `scripts/extract_egemaps_features.py`: extracts openSMILE eGeMAPSv02 Functionals with raw and RMS-normalized variants plus validity QC.
-- `scripts/analyze_geometry_pilot.py`: runs first-pass PCA, UMAP, HDBSCAN, linear probe, kNN purity, and GMM+BIC.
-- `scripts/extract_spectrogram_representation.py`: extracts fixed-size raw and RMS-normalized log-mel spectrogram vectors.
-- `scripts/extract_animal2vec_embeddings.py`: extracts context-window animal2vec embeddings with focal-frame pooling when a compatible animal2vec environment and checkpoint are available.
-- `scripts/analyze_embedding_pilot.py`: runs the same geometry analysis on dense vector representations such as spectrogram embeddings.
-
-## Usage
-
-Create the full call-level manifest:
-
-```powershell
-python scripts/build_meerkat_call_manifest.py --skip-empty-size 3208
-```
-
-Create the strict balanced geometry pilot:
-
-```powershell
-python scripts/make_pilot_manifest.py --max-per-label 600 --name balanced_600
-```
-
-Create the capped stratified pilot:
-
-```powershell
-python scripts/make_pilot_manifest.py --max-per-label 3000 --name capped_3000
-```
-
-## Target Public Labels
+The core estimand is:
 
 ```text
-sn, cc, ld, mo, al, soc, agg, oth
+Delta = L_test(M0) - L_test(M1)
 ```
 
-## First Analysis Plan
+reported overall and per manual category.
 
-Start with `pilot_manifest_balanced_600.csv`, extract acoustic features, and run:
+## Certificate Outputs
 
-- label-cluster alignment
-- categorical separability
-- within-label multimodality
-- continuous acoustic geometry
-- cross-representation robustness
+The framework should return a set-valued, calibrated conclusion, such as:
 
-Use two pilot sets:
+- `residual-acoustic-information detected`
+- `no residual evidence detected`
+- `proxy-validity unresolved`
+- `sensitive to measured nuisance controls`
 
-- `balanced_600`: strict class-balanced geometry pilot for PCA, UMAP, HDBSCAN, GMM, Fuzzy C-Means, silhouette, kNN purity, AMI, and ARI.
-- `capped_3000`: capped stratified pilot for checking whether the same patterns remain visible under a more natural, long-tailed label prevalence.
+`unresolved` is an intended output, not a failure. It prevents over-interpreting
+weak clustering or temporal-adjacency evidence.
 
-For short calls such as `sn`, use raw call boundaries for hand-crafted acoustic features and eGeMAPS. For neural embeddings, use real acoustic context windows, then pool only the focal-call frames.
+## Key Reports
 
-## Current Pilot Result
+- `reports/replication_sanity_check_summary.md`
+- `reports/animal2vec_diagnostic_runbook.md`
+- `reports/hdbscan_stability_protocol.md`
+- `reports/calibrated_proxy_validity_research_plan_v2.md`
+- `reports/bat_proxy_audit_summary.md`
 
-The first `balanced_600` acoustic-feature pilot is summarized in:
+## First Audit Scripts
 
-- `reports/balanced_600_acoustic_pilot.md`
+Bat observability-degradation audit:
 
-The first result suggests that manual labels are moderately decodable from hand-crafted acoustic features, but do not align with eight clean unsupervised clusters under this representation. This is an initial pilot result only; eGeMAPS, animal2vec, and robustness analyses are still needed.
+```powershell
+python scripts\audit_bat_interaction_mapping.py `
+  --annotations "PATH\TO\Annotations.csv" `
+  --fileinfo "PATH\TO\FileInfo.csv" `
+  --skip-full-mapping-csv
+```
 
-The HDBSCAN parameter sensitivity diagnostic is summarized in:
+The script outputs a segment-to-interaction mapping audit, next-segment edges,
+and context-stratified temporal-adjacency reliability curves. The raw bat
+metadata are not stored in this repository; use
+`scripts\download_bat_metadata.py` to retrieve the public metadata locally.
 
-- `reports/hdbscan_sensitivity_balanced_600.md`
+MeerKAT clip-local adjacency audit:
 
-Across 200 HDBSCAN fits over raw/normalized features, full/PCA spaces, and multiple `min_cluster_size`/`min_samples` values, label-cluster alignment remained weak. The highest observed AMI was about 0.14 in PCA-10, with a high noise rate around 0.64.
-
-The first log-mel spectrogram representation baseline is summarized in:
-
-- `reports/logmel_spectrogram_balanced_600.md`
-- `reports/paper_style_spectrogram_balanced_600.md`
-
-This diagnostic checks whether weak clustering was caused by using overly coarse hand-crafted summary features. A simple 64x64 call-boundary log-mel representation did not improve label-aligned natural clustering or linear-probe separability. This suggests that the weak cluster result is not only a librosa-summary-feature artifact, although stronger context-aware embeddings still need to be tested.
-
-The paper-style version uses 40 mel bins, approximately 30 ms frames, 3.75 ms hops, per-spectrogram z-transform, original call duration, and right-padding to a 500 ms grid. It produced a more continuous UMAP trajectory, but default HDBSCAN assigned all points to noise and the linear probe remained around Macro-F1 0.53.
-
-The HDBSCAN sensitivity diagnostic for the paper-style spectrogram baseline is summarized in:
-
-- `reports/hdbscan_sensitivity_logmel_paper_pad500_balanced_600.md`
-
-Across 250 HDBSCAN fits over raw/normalized variants, PCA spaces, and HDBSCAN parameters, the highest observed AMI was about 0.184. This shows that the all-noise default result was partly parameter-dependent, but the recovered clusters were fragmented, noisy, and only weakly aligned with public labels. When screened first using unsupervised criteria such as noise rate, cluster count, cluster size, and persistence, the remaining settings still had weak AMI/ARI.
-
-The first eGeMAPS baseline is summarized in:
-
-- `reports/egemaps_balanced_600.md`
-
-eGeMAPS produced somewhat higher default-HDBSCAN AMI than the earlier baselines, but feature validity was highly label-dependent. In particular, most `sn` calls were too short for valid eGeMAPS extraction under original call boundaries. A valid-only sensitivity analysis reduced the apparent separability, so eGeMAPS does not overturn the current conclusion that public labels are only weakly aligned with natural acoustic clusters.
-
-The animal2vec extraction plan and script are summarized in:
-
-- `reports/animal2vec_plan.md`
-
-animal2vec should be run in a separate Python 3.9-compatible environment because the official repository depends on fairseq and warns that Python 3.10+ is not compatible. The extraction script uses real acoustic context as model input, but pools only focal-call frames for the final embedding.
-
-The optional dependency list for that separate environment is:
-
-- `requirements-animal2vec.txt`
-
-The current script I/O, preprocessing, label use, dimensionality reduction, clustering parameters, metric definitions, leakage risks, NaN/imputation handling, and result-code consistency audit is:
-
-- `reports/script_io_and_method_audit.md`
-
-Current animal2vec local environment status:
-
-- Python 3.9 environment: created locally as a project-specific environment; keep the exact machine path out of public Git.
-- Installed and smoke-tested: `torch==1.13.1+cpu`, `torchaudio==0.13.1+cpu`, `librosa==0.10.1`
-- Not yet installed: `fairseq`
-- Windows blockers observed: PyPI `fairseq==0.12.2` requires Microsoft Visual C++ Build Tools; the official pinned GitHub fairseq commit fails without symlink privileges/developer mode.
-- Preferred checkpoint for unsupervised representation geometry: `animal2vec_large_pretrained_MeerKAT_240507.pt`, not the finetuned checkpoint, because the finetuned version was trained with MeerKAT labels.
-- Checkpoint download helper: `scripts/download_animal2vec_checkpoint.ps1` supports resumable Edmond downloads and MD5 verification.
+```powershell
+python scripts\audit_meerkat_clip_local_adjacency.py `
+  --manifest data_manifest\call_manifest.csv
+```

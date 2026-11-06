@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "model_fits": 0,
+  "manifest_jobs": 30,
+  "raw_oof_rows": 110070,
+  "metric_rows": 54,
+  "point_scalars_checked": 1296,
+  "point_max_abs_error": 0.0,
+  "ci_max_abs_error": 0.0,
+  "paired_changes_max_abs_error": 0.0,
+  "fold_max_abs_error": 0.0,
+  "source_protocol_sha256": "41ca3c01652d1303e6bfa22e84fd37f1821d744c86e0ee4494f28d8f430cbb8e",
+  "scope": "Real B3 descriptive/exploratory;no conditional-information or causal certificate",
+  "intervals": "Recomputed with frozen bootstrap;unadjusted,conditional on stored fits,no refitting uncertainty",
+  "extra_diagnostic": "Post-hoc full-row al POST clip/fold attribution,without sample deletion"
+}

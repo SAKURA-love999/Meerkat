@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "new_fitted_jobs": 30,
+  "new_M0_fits": 0,
+  "new_M1_fits": 0,
+  "existing_M0_M1_reused": true,
+  "n_calls": 18345,
+  "n_clips": 9756,
+  "raw_oof_rows": 110070,
+  "paired_metric_rows": 162,
+  "per_call_decomposition_max_error": 8.881784197001252e-16,
+  "causal_decomposition": false,
+  "conditional_information_certified": false,
+  "independent_confirmation": false,
+  "convergence_warning_jobs": 0,
+  "intervals": "Unadjusted paired clips conditional on OOF,no training uncertainty.",
+  "limitation": "Remaining78 features still depend on extraction resolution;not certified pure vocal detail."
+}

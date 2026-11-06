@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -40,9 +41,11 @@ def event_window_has_nonfocal(
     direction: str,
 ) -> bool:
     if direction == "post":
-        return bool(np.any((nonfocal_starts >= end) & (nonfocal_starts <= end + tau)))
+        idx = np.searchsorted(nonfocal_starts, end, side="left")
+        return bool(idx < len(nonfocal_starts) and nonfocal_starts[idx] <= end + tau)
     if direction == "pre":
-        return bool(np.any((nonfocal_ends <= start) & (nonfocal_ends >= start - tau)))
+        idx = np.searchsorted(nonfocal_ends, start, side="right") - 1
+        return bool(idx >= 0 and nonfocal_ends[idx] >= start - tau)
     raise ValueError(direction)
 
 
@@ -62,12 +65,96 @@ def audit(df: pd.DataFrame, args: argparse.Namespace) -> tuple[pd.DataFrame, pd.
     work = work.dropna(subset=["_start", "_end"])
 
     windows_ms = [float(x) for x in args.windows_ms.split(",") if x.strip()]
+    if args.skip_detail_csv:
+        focal = work.loc[work["_focal"], ["_clip", "_label", "_start", "_end"]].copy()
+        focal["row_index"] = focal.index
+        nonfocal = work.loc[~work["_focal"], ["_clip", "_start", "_end"]].copy()
+
+        left_post = focal.sort_values(["_end", "_clip"]).reset_index(drop=True)
+        right_post = (
+            nonfocal[["_clip", "_start"]]
+            .rename(columns={"_start": "next_nonfocal_start"})
+            .sort_values(["next_nonfocal_start", "_clip"])
+            .reset_index(drop=True)
+        )
+        post = pd.merge_asof(
+            left_post,
+            right_post,
+            by="_clip",
+            left_on="_end",
+            right_on="next_nonfocal_start",
+            direction="forward",
+            allow_exact_matches=True,
+        )
+
+        left_pre = focal.sort_values(["_start", "_clip"]).reset_index(drop=True)
+        right_pre = (
+            nonfocal[["_clip", "_end"]]
+            .rename(columns={"_end": "prev_nonfocal_end"})
+            .sort_values(["prev_nonfocal_end", "_clip"])
+            .reset_index(drop=True)
+        )
+        pre = pd.merge_asof(
+            left_pre,
+            right_pre,
+            by="_clip",
+            left_on="_start",
+            right_on="prev_nonfocal_end",
+            direction="backward",
+            allow_exact_matches=True,
+        )
+
+        nearest = post[["row_index", "_clip", "_label", "_start", "_end", "next_nonfocal_start"]].merge(
+            pre[["row_index", "prev_nonfocal_end"]], on="row_index", how="left"
+        )
+        rows = []
+        for tau_ms in windows_ms:
+            tau = tau_ms / 1000.0
+            tmp = nearest.copy()
+            tmp["post_censored"] = tmp["_end"] > (args.clip_duration_s - tau)
+            tmp["pre_censored"] = tmp["_start"] < tau
+            tmp["nf_post"] = (~tmp["post_censored"]) & tmp["next_nonfocal_start"].notna() & (
+                tmp["next_nonfocal_start"] <= tmp["_end"] + tau
+            )
+            tmp["nf_pre"] = (~tmp["pre_censored"]) & tmp["prev_nonfocal_end"].notna() & (
+                tmp["prev_nonfocal_end"] >= tmp["_start"] - tau
+            )
+            for label, g in tmp.groupby("_label", sort=True):
+                post_eligible = int((~g["post_censored"]).sum())
+                pre_eligible = int((~g["pre_censored"]).sum())
+                post_positive = int(g["nf_post"].sum())
+                pre_positive = int(g["nf_pre"].sum())
+                p_post = post_positive / post_eligible if post_eligible else np.nan
+                p_pre = pre_positive / pre_eligible if pre_eligible else np.nan
+                n_focal_targets = int(len(g))
+                rows.append(
+                    {
+                        "label": label,
+                        "window_ms": tau_ms,
+                        "n_focal_targets": n_focal_targets,
+                        "post_censored_n": int(g["post_censored"].sum()),
+                        "post_censored_fraction": float(g["post_censored"].mean()),
+                        "post_eligible_n": post_eligible,
+                        "post_positive_n": post_positive,
+                        "p_nf_post": float(p_post),
+                        "pre_censored_n": int(g["pre_censored"].sum()),
+                        "pre_censored_fraction": float(g["pre_censored"].mean()),
+                        "pre_eligible_n": pre_eligible,
+                        "pre_positive_n": pre_positive,
+                        "p_nf_pre": float(p_pre),
+                        "post_minus_pre": float(p_post - p_pre) if post_eligible and pre_eligible else np.nan,
+                    }
+                )
+        summary = pd.DataFrame(rows).sort_values(["window_ms", "label"])
+        detail = focal[["row_index"]].copy()
+        return detail, summary
+
     detail_rows = []
     for clip_id, g in work.groupby("_clip", sort=False):
         g = g.sort_values("_start")
         nonfocal = g.loc[~g["_focal"]]
-        nf_starts = nonfocal["_start"].to_numpy(float)
-        nf_ends = nonfocal["_end"].to_numpy(float)
+        nf_starts = np.sort(nonfocal["_start"].to_numpy(float))
+        nf_ends = np.sort(nonfocal["_end"].to_numpy(float))
         for row_idx, row in g.loc[g["_focal"]].iterrows():
             for tau_ms in windows_ms:
                 tau = tau_ms / 1000.0
@@ -134,12 +221,19 @@ def main() -> None:
     parser.add_argument("--start-col", default=None)
     parser.add_argument("--end-col", default=None)
     parser.add_argument("--focal-col", default=None)
+    parser.add_argument(
+        "--skip-detail-csv",
+        action="store_true",
+        help="Only write label/window summary rates, not the per-focal-event detail CSV.",
+    )
     args = parser.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(args.manifest)
     detail, summary = audit(df, args)
-    detail.to_csv(args.output_dir / "meerkat_clip_local_prepost_nf_by_focal_event.csv", index=False)
+    detail_path = args.output_dir / "meerkat_clip_local_prepost_nf_by_focal_event.csv"
+    if not args.skip_detail_csv:
+        detail.to_csv(detail_path, index=False)
     summary.to_csv(args.output_dir / "meerkat_clip_local_prepost_nf_rates_by_label.csv", index=False)
 
     overall = {
@@ -148,7 +242,7 @@ def main() -> None:
         "n_focal_events": int(len(detail[["row_index"]].drop_duplicates())),
         "windows_ms": [float(x) for x in args.windows_ms.split(",") if x.strip()],
         "clip_duration_s": args.clip_duration_s,
-        "output_detail": str(args.output_dir / "meerkat_clip_local_prepost_nf_by_focal_event.csv"),
+        "output_detail": None if args.skip_detail_csv else str(detail_path),
         "output_summary": str(args.output_dir / "meerkat_clip_local_prepost_nf_rates_by_label.csv"),
     }
     with open(args.output_dir / "meerkat_clip_local_adjacency_audit_summary.json", "w", encoding="utf-8") as f:

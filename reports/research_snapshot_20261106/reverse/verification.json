@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "new_M78_jobs": 30,
+  "reference_model_refits": 0,
+  "existing_three_models_reused": true,
+  "n_calls": 18345,
+  "n_clips": 9756,
+  "raw_oof_rows": 110070,
+  "metric_rows": 270,
+  "interaction_rows": 54,
+  "per_call_identity_max_error": 8.881784197001252e-16,
+  "convergence_warning_jobs": 0,
+  "causal_decomposition": false,
+  "conditional_information_certified": false,
+  "independent_confirmation": false,
+  "intervals": "Unadjusted paired clips conditional on stored OOF;no training uncertainty.",
+  "limitation": "M78 still contains duration/amplitude/resolution-dependent estimates;not pure vocal detail."
+}

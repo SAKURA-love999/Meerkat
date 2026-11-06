@@ -1,4 +1,102 @@
-# Repertoire Geometry and Calibrated Proxy Validity
+# MeerKAT Acoustic Gain Attribution
+
+## Current Research Question
+
+After manual call category and measured temporal history are known,where does
+an apparent acoustic prediction increment come from,and what interpretation is
+permitted? We study held-out prediction of nearby non-focal activity in anonymous
+10-second clips,not a verified receiver response or continuous-time intensity.
+
+The recent primary protocol fixes18345 calls/9756 clips,400ms complete PRE/POST
+observation and five saved clip folds. It separates sample availability,received
+amplitude/overlap controls,baseline expression,regularization,PCA and explicit
+extraction-configuration inputs. Full and valid-only evaluations are not
+different training populations unless a named experiment explicitly refits.
+
+## Status And Bounded Findings (2026-11-06)
+
+- Selection/random label-N controls,amplitude/overlap controls and OOF diagnostics
+  are complete. Feature validity changes sample support,especially short sn.
+- Known-truth synthetic controls,real linear/RMS-spline/HGB comparisons,nested C
+  and separate PCA screens are complete. No general calibrated test is claimed.
+- Overall controlled POST increments have not established stable positive gains.
+  An exploratory al increment is baseline-expression-sensitive;no-information,
+  manual-category sufficiency and causal conclusions are not established.
+- The n_fft/hop_length/n_mels columns reconstruct from existing boundary inputs.
+  Configuration-only inputs do not reproduce the linear al gain. The M78 reverse
+  ablation completes the input-block comparison without re-extracting features.
+- Independent dataset/caller/session validation and verified-response/causal
+  experiments have not been completed. No pristine same-release confirmation
+  set is claimed. Research novelty remains unresolved.
+
+Audited aggregate tables and minimal native-run provenance are in
+[`reports/research_snapshot_20261106`](reports/research_snapshot_20261106/).
+Read its README before comparing protocols. This is an exploratory research
+snapshot,not a submission-ready paper or a clean-machine replication package.
+
+## Main Code
+
+|Purpose|Scripts|
+|---|---|
+|Frozen cohort and controls|run_shared_cohort_selection_control.py,extend_shared_cohort_controls.py,run_control_block_attribution.py|
+|Known-truth controls|calibration_dgp.py,calibration_dgp_asymmetric.py,run_baseline_capacity.py,run_baseline_capacity_b2.py|
+|Real model capacity|run_baseline_capacity_b3.py,baseline_capacity_models.py|
+|Training-only regularization/PCA|run_nested_logistic_regularization.py,run_pca_sensitivity.py|
+|Configuration source/forward chain|audit_acoustic_config_fields.py,run_config_source_attribution.py|
+|Reverse M78 comparison|run_reverse_config_ablation.py,audit_reverse_config_ablation.py|
+|Public aggregate export|export_public_research_snapshot.py|
+
+M0 contains category,measured side-appropriate history,duration/boundaries and
+the named controls. Mconfig adds three configuration fields;M78 adds the other78;
+M1 adds all81. Positive Delta is natural-logloss reduction. POST-minus-PRE is a
+direction diagnostic,not a causal certificate. The predictive interaction is an
+order-dependence contrast of fitted risks,not necessarily biological synergy.
+
+## Environment And Tests
+
+The current shallow-model environment uses Python3.9.13. Observed direct package
+versions are pinned in requirements-controls-py39.txt;this is not a full lockfile.
+The optional animal2vec stack has separate requirements and compatibility limits.
+
+```powershell
+python -m pip install -r requirements-controls-py39.txt
+Set-Location scripts
+python -m unittest test_reverse_config_ablation test_config_source_attribution test_baseline_capacity_b3 -v
+```
+
+Tests use temporary mock classifiers and small preprocessing fixtures,not the
+scientific dataset. They do not validate a biological conclusion.
+
+Python drivers expose explicit path arguments through --help. Existing PowerShell
+wrappers use the author's local project/private workspace and external native
+receipt helper;they are not portable launchers for a fresh clone. Raw data,
+feature matrices,saved fold/source packets and row-level OOF are intentionally
+not in Git. Reconstructing a run elsewhere requires these inputs and a fresh
+local protocol;the full original absolute-path contracts are not published.
+Never alter a completed frozen run's code/inputs or reuse its output directory
+to silently introduce new parameters. Byte hashes may differ after Git line-ending
+normalization;the public manifest distinguishes source and export hashes.
+
+## Evidence Boundaries And Next Validation
+
+Independent-data feasibility screening can start now. Before scoring a genuinely
+untouched dataset,freeze the model/comparisons,primary endpoint,important-effect
+margin and precision target. Confirm recording/caller/date provenance and raw
+audio availability;another release of the same recordings is not independence.
+Richer identity/spatial/behavioral records can validate a receiver-linked proxy,
+but are not by themselves causal proof. Controlled playback/manipulation is a
+separate collaboration/ethics-gated study,not an inference from this repository.
+
+Private paper drafts,research-refinement reviews and run logs are excluded.
+No new license or redistribution permission for the original datasets is granted.
+Older geometry and bat audit reports remain historical exploratory material;
+they are not automatically re-audited or promoted to current claims by this commit.
+
+## Earlier Project Framing (Historical)
+
+The following records the earlier geometry/proxy-calibration direction. In
+particular,a calibrated certificate,behavioral sufficiency and stable natural
+clusters are not established outcomes of the current prediction audit.
 
 This project studies animal vocal repertoires without assuming that manual call
 labels are automatically equivalent to natural acoustic categories or verified
@@ -157,6 +255,10 @@ weak clustering or temporal-adjacency evidence.
 - `reports/hdbscan_stability_protocol.md`
 - `reports/calibrated_proxy_validity_research_plan_v2.md`
 - `reports/bat_proxy_audit_summary.md`
+- `reports/bat_temporal_neighbor_categories_summary.md`
+- `reports/meerkat_clip_local_proxy_audit_summary.md`
+- `reports/m1_capped_history_runbook.md`
+- `reports/m1_results_and_marked_process_framing.md`
 
 ## First Audit Scripts
 

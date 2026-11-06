@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "model_fits": 0,
+  "zero_fit_guard": true,
+  "source_oof_files": 90,
+  "new_transform_files": 60,
+  "outer_oof_rows": 330210,
+  "metric_rows": 162,
+  "max_abs_errors": {
+    "point_metrics": 0.0,
+    "intervals": 0.0,
+    "paired_changes": 0.0,
+    "folds": 0.0
+  },
+  "source_protocol_sha256": "ef4a7525a823f64e7cedcb9a559798645a1a40ba77700e4dac66ed78fc4d693e",
+  "m0_identical_across_modes": true,
+  "new_full_pca_components": [
+    81
+  ],
+  "new_full_fit_first30_variance_range": [
+    0.95229627429565,
+    0.9526437210098535
+  ],
+  "extra_diagnostic": "Posthoc all-mode/all-label paired RMS-spline/HGB versus linear;no sample deletion.",
+  "intervals": "Frozen1000 paired clips,unadjusted and conditional on existing OOF;not full-training uncertainty.",
+  "acceptance_status": "Local executor/provisional;no new semantic review or novelty adjudication."
+}

@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "scope": "B3_REAL_PREDICTION_SENSITIVITY",
+  "new_jobs": 20,
+  "new_model_fits_required": 40,
+  "reference_jobs": 10,
+  "n_calls": 18345,
+  "n_clips": 9756,
+  "n_oof_rows": 110070,
+  "metric_rows": 54,
+  "fixed_clip_folds": true,
+  "real_outcomes_used": true,
+  "causal_effect_assessed": false,
+  "conditional_information_certified": false,
+  "practical_equivalence_margin": null,
+  "intervals": "Exploratory overall/per-label paired clips conditional on OOF;unadjusted,no refits."
+}

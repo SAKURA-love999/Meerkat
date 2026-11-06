@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "scope": "EXPLORATORY_FIXED_B3_PCA_SCREEN",
+  "n_calls": 18345,
+  "n_clips": 9756,
+  "outer_oof_rows": 330210,
+  "metric_rows": 162,
+  "new_M1_jobs": 60,
+  "M0_refits": 0,
+  "reference_jobs": 30,
+  "m0_predictions_identical_across_modes": true,
+  "convergence_warning_jobs": 0,
+  "conditional_information_certified": false,
+  "causal_effect_assessed": false,
+  "independent_confirmation": false,
+  "practical_equivalence_margin": null,
+  "pca30_original_transform_spectrum": "Not recorded;not reconstructed/refitted.",
+  "intervals": "Paired clips conditional on existing OOF,unadjusted,no training refits."
+}

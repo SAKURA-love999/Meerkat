@@ -1,0 +1,3 @@
+# Preserve the exported artifact bytes used by provenance.json SHA256 entries.
+*.csv -text
+*.json -text

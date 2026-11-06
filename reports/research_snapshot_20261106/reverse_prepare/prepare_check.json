@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "model_fits": 0,
+  "zero_fit_guard": true,
+  "n_calls": 18345,
+  "n_clips": 9756,
+  "n_valid": 14786,
+  "M78_features": 78,
+  "config_inputs_removed": [
+    "n_fft",
+    "hop_length",
+    "n_mels"
+  ],
+  "new_M78_fits": 30,
+  "reference_model_refits": 0,
+  "reference_jobs": 30,
+  "protocol_sha256": "5e500d0609241b8dbb28998f250d5a72a63c6c83924ad2c8c2249e187261e0b9",
+  "scientific_prediction_results_created": false
+}

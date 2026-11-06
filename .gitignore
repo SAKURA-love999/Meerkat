@@ -11,6 +11,8 @@ figures/*.pdf
 figures/*.svg
 reports/bat_proxy_audit/
 reports/bat_proxy_audit_test/
+reports/meerkat_proxy_audit/
+reports/meerkat_proxy_baseline/meerkat_prepost_baseline_targets.csv
 
 # Large audio/model artifacts
 models/
@@ -26,3 +28,16 @@ models/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local review transcripts and row-level selection audit exports
+.aris/traces/
+.aris/meta/
+reports/librosa_egemaps_selection_control/selection_oof_predictions.csv
+reports/librosa_egemaps_selection_control/librosa_raw_egemaps_valid_only.csv
+
+# Private research workflow material; retained locally, not part of the release
+/refine-logs/
+/MANIFEST.md
+.aris/
+.env
+.env.*

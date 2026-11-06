@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "model_fits": 0,
+  "zero_fit_guard": true,
+  "source_oof_files": 60,
+  "source_metadata_files": 60,
+  "raw_oof_rows": 110070,
+  "metric_rows": 270,
+  "interaction_rows": 54,
+  "max_abs_errors": {
+    "points": 0.0,
+    "intervals": 0.0,
+    "interaction": 0.0,
+    "four_model": 0.0,
+    "folds": 0.0
+  },
+  "per_call_identity_max_error": 8.881784197001252e-16,
+  "source_protocol_sha256": "5e500d0609241b8dbb28998f250d5a72a63c6c83924ad2c8c2249e187261e0b9",
+  "fit_start_utc": "2026-11-06T06:13:30.352920+00:00",
+  "fit_end_utc": "2026-11-06T06:14:36.904306+00:00",
+  "convergence_warning_jobs": 0,
+  "acceptance_status": "Deterministic local audit only;no new review/novelty adjudication."
+}

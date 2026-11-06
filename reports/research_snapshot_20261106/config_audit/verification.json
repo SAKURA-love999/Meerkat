@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "model_fits": 0,
+  "zero_fit_guard": true,
+  "source_oof_files": 60,
+  "source_metadata_files": 60,
+  "raw_oof_rows": 110070,
+  "metric_rows": 162,
+  "wide_rows": 54,
+  "source_protocol_sha256": "474a839d98e622e2d20895497fc444f13f0fc6e005927fec4befdd57d2233f32",
+  "max_abs_errors": {
+    "points": 0.0,
+    "intervals": 0.0,
+    "three_models": 0.0,
+    "folds": 0.0
+  },
+  "per_call_decomposition_max_error": 8.881784197001252e-16,
+  "configurations_reconstructed_from_M0": true,
+  "existing_M0_M1_exactly_reused": true,
+  "convergence_warning_jobs": 0,
+  "fit_start_utc": "2026-11-05T17:27:55.961484+00:00",
+  "fit_end_utc": "2026-11-05T17:28:20.684842+00:00",
+  "intervals": "Unadjusted paired clips, conditional on stored OOF; no training uncertainty.",
+  "acceptance_status": "Local deterministic audit only; no new reviewer or novelty adjudication."
+}

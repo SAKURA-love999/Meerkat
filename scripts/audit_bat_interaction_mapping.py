@@ -53,6 +53,22 @@ SEG_END_CANDIDATES = (
 WIDE_VOICE_START_RE = re.compile(r"^Voice start sample \((\d+)\)$", re.I)
 WIDE_VOICE_END_RE = re.compile(r"^Voice end sample \((\d+)\)$", re.I)
 
+BAT_CONTEXT_LABELS = {
+    "0": "Unknown",
+    "1": "Separation",
+    "2": "Biting",
+    "3": "Feeding",
+    "4": "Fighting",
+    "5": "Grooming",
+    "6": "Isolation",
+    "7": "Kissing",
+    "8": "Landing",
+    "9": "Mating protest",
+    "10": "Threat-like",
+    "11": "General",
+    "12": "Sleeping",
+}
+
 
 def first_existing(df: pd.DataFrame, candidates: Iterable[str]) -> str | None:
     norm = {c.lower().strip(): c for c in df.columns}
@@ -395,7 +411,11 @@ def reliability_curve(edges: pd.DataFrame, windows_ms: list[float]) -> pd.DataFr
                     "recall_of_same_interaction_edges": same / true_total if true_total else np.nan,
                 }
             )
-    return pd.DataFrame(rows)
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        out["context_label"] = out["context"].astype(str).map(BAT_CONTEXT_LABELS).fillna(out["context"])
+        out.loc[out["context"].astype(str).eq("ALL"), "context_label"] = "ALL"
+    return out
 
 
 def main() -> None:

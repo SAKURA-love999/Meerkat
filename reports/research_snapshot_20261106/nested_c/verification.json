@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "scope": "EXPLORATORY_NESTED_C_SENSITIVITY",
+  "n_calls": 18345,
+  "n_clips": 9756,
+  "n_oof_rows": 183450,
+  "metric_rows": 90,
+  "inner_jobs": 360,
+  "outer_jobs": 40,
+  "convergence_warning_jobs": 0,
+  "fixed_clip_folds": true,
+  "conditional_information_certified": false,
+  "causal_effect_assessed": false,
+  "independent_confirmation": false,
+  "practical_equivalence_margin": null,
+  "intervals": "Unadjusted paired clip resampling conditional on fitted OOF; not nested-training uncertainty."
+}

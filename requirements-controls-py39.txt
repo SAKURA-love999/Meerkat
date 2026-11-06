@@ -1,0 +1,13 @@
+# Observed working environment for the shallow-model control experiments.
+# Python3.9.13;not a lock for the optional animal2vec/fairseq stack.
+numpy==1.23.5
+pandas==1.5.3
+scipy==1.10.0
+scikit-learn==1.2.0
+threadpoolctl==3.6.0
+h5py==3.7.0
+soundfile==0.12.1
+librosa==0.10.1
+matplotlib==3.6.3
+seaborn==0.13.2
+opensmile==2.6.0
